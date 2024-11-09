@@ -35,8 +35,10 @@ def convert_audio(input_path, output_path):
         raise
 
 if __name__ == "__main__":
-    input_audio_path = "D:/git/audio-to-text-nlp/data/07_christmasfantasy.mp3"
-    output_audio_path = "data/converted_audio.wav"
-    os.makedirs(os.path.dirname(output_audio_path), exist_ok=True)  # Ensure the 'data' folder exists
+    input_audio_path = os.path.join("..", "data", "07_christmasfantasy.mp3")
+    output_audio_path = os.path.join("..", "data", "converted_audio.wav")
+    
+    # Ensure the 'data' folder exists
+    os.makedirs(os.path.dirname(output_audio_path), exist_ok=True)
     
     convert_audio(input_audio_path, output_audio_path)
