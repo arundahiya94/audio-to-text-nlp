@@ -1,21 +1,52 @@
+import logging
+import os
+from dotenv import load_dotenv
 import assemblyai as aai
 
-# Replace with your API key
-aai.settings.api_key = "ee0d473b0e3b4a34ac2428ab5c3ddaa4"
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# URL of the file to transcribe
-FILE_URL = "D:/git/audio-to-text-nlp/converted_audio.wav"
+# Load environment variables from a .env file
+load_dotenv()  # This loads the variables from .env into the environment
 
-# You can also transcribe a local file by passing in a file path
-# FILE_URL = './path/to/file.mp3'
+# Retrieve API Key from environment variables
+API_KEY = os.getenv("ASSEMBLYAI_API_KEY")  # Fetch the API key securely from the environment
+if not API_KEY:
+    logger.error("API Key for AssemblyAI is missing. Please set the environment variable.")
+    raise ValueError("AssemblyAI API Key is required.")
 
-transcriber = aai.Transcriber()
-transcript = transcriber.transcribe(FILE_URL)
+aai.settings.api_key = API_KEY
 
-if transcript.status == aai.TranscriptStatus.error:
-    print(transcript.error)
-else:
-    # Save the transcript text to a file
-    with open("transcription_output.txt", "w") as text_file:
-        text_file.write(transcript.text)
-    print("Transcription saved to 'transcription_output.txt'")
+def transcribe_audio(file_path):
+    try:
+        # Check if the file exists
+        if not os.path.isfile(file_path):
+            logger.error(f"Audio file '{file_path}' does not exist.")
+            raise FileNotFoundError(f"Audio file '{file_path}' not found.")
+
+        # Transcribe the audio file
+        logger.info(f"Starting transcription for {file_path}")
+        transcriber = aai.Transcriber()
+        transcript = transcriber.transcribe(file_path)
+
+        # Check if there was an error with the transcription
+        if transcript.status == aai.TranscriptStatus.error:
+            logger.error(f"Error transcribing the audio file: {transcript.error}")
+            return
+
+        # Save the transcript text to a file
+        output_file = "transcription_output.txt"
+        with open(output_file, "w") as text_file:
+            text_file.write(transcript.text)
+        
+        logger.info(f"Transcription saved to '{output_file}'")
+
+    except Exception as e:
+        logger.error(f"Error during transcription: {e}")
+        raise
+
+if __name__ == "__main__":
+    audio_file_path = "D:/git/audio-to-text-nlp/converted_audio.wav"
+    
+    transcribe_audio(audio_file_path)
