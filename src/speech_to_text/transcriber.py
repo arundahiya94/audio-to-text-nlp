@@ -36,7 +36,9 @@ def transcribe_audio(file_path):
             return
 
         # Save the transcript text to a file
-        output_file = "transcription_output.txt"
+        output_file = "data/transcription_output.txt"
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)  # Ensure the 'data' folder exists
+        
         with open(output_file, "w") as text_file:
             text_file.write(transcript.text)
         
@@ -47,6 +49,6 @@ def transcribe_audio(file_path):
         raise
 
 if __name__ == "__main__":
-    audio_file_path = "D:/git/audio-to-text-nlp/converted_audio.wav"
+    audio_file_path = "D:/git/audio-to-text-nlp/data/converted_audio.wav"
     
     transcribe_audio(audio_file_path)
