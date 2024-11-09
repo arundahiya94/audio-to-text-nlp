@@ -47,11 +47,12 @@ def preprocess_text(text):
         logger.debug(f"Tokens after stopword removal: {filtered_tokens}")
 
         # Correct spelling, filtering out any None values
-        corrected_tokens = [spell.correction(word) for word in filtered_tokens if word is not None]
-        logger.debug(f"Tokens after spelling correction: {corrected_tokens}")
+        # corrected_tokens = [spell.correction(word) for word in filtered_tokens if word is not None]
+        # logger.debug(f"Tokens after spelling correction: {corrected_tokens}")
 
         # Join tokens back into a single string
-        processed_text = " ".join(corrected_tokens)
+        # processed_text = " ".join(corrected_tokens)
+        processed_text = " ".join(filtered_tokens)
         
         logger.info("Text preprocessing completed.")
         return processed_text
