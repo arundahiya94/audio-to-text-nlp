@@ -3,6 +3,7 @@ from nlp_analysis.preprocessing import load_transcription, preprocess_text
 from nlp_analysis.sentiment_analysis import perform_sentiment_analysis
 from nlp_analysis.topic_modelling import perform_topic_modeling
 from nlp_analysis.summarization import generate_summary
+import os
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -39,5 +40,7 @@ def run_pipeline(file_path):
         logger.error(f"Error in pipeline: {e}")
 
 if __name__ == "__main__":
-    transcription_file_path = "data/transcription_output.txt"
+    # Define the path relative to the current script's location
+    transcription_file_path = os.path.join("..", "data", "transcription_output.txt")
+    
     run_pipeline(transcription_file_path)
