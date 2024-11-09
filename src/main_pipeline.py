@@ -1,7 +1,7 @@
 import logging
 from nlp_analysis.preprocessing import load_transcription, preprocess_text
 from nlp_analysis.sentiment_analysis import perform_sentiment_analysis
-from nlp_analysis.topic_modeling import perform_topic_modeling
+from nlp_analysis.topic_modelling import perform_topic_modeling
 from nlp_analysis.summarization import generate_summary
 
 # Set up logging
