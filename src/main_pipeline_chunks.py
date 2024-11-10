@@ -22,11 +22,7 @@ def run_pipeline(file_path):
             logger.error("Transcription file is empty or could not be loaded.")
             return
 
-        processed_text = preprocess_text(transcription)
-
-        # Step 1: Sentiment Analysis
-        sentiment_results = perform_sentiment_analysis(processed_text)
-        logger.info(f"Sentiment Analysis Result: {sentiment_results}")
+        processed_text = preprocess_text(transcription) 
 
         # Step 2: Topic Modeling
         topics = perform_topic_modeling(processed_text)
@@ -35,6 +31,10 @@ def run_pipeline(file_path):
         # Step 3: Summarization
         summary = generate_summary(processed_text)
         logger.info(f"Text Summary: {summary}")
+
+        # Step 1: Sentiment Analysis
+        sentiment_results = perform_sentiment_analysis(processed_text)
+        logger.info(f"Sentiment Analysis Result: {sentiment_results}")
 
     except Exception as e:
         logger.error(f"Error in pipeline: {e}")
