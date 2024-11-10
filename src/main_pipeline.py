@@ -3,39 +3,12 @@ from nlp_analysis.preprocessing import load_transcription, preprocess_text
 from nlp_analysis.sentiment_analysis import perform_sentiment_analysis
 from nlp_analysis.topic_modelling import perform_topic_modeling
 from nlp_analysis.summarization import generate_summary
+from transformers import AutoTokenizer  # Added to load tokenizer
 import os
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-def split_text_into_chunks(text, max_chunk_length=512):
-    """
-    Splits the text into smaller chunks to avoid exceeding model input limits.
-    
-    :param text: The raw text to be split.
-    :param max_chunk_length: Maximum length of each chunk (default is 512 tokens, but it can vary based on the model).
-    :return: A list of text chunks.
-    """
-    # Split the text into sentences or a smaller unit to make chunking more coherent
-    sentences = text.split('. ')  # Simple sentence splitting, can be replaced with more sophisticated tokenization
-
-    chunks = []
-    current_chunk = []
-
-    for sentence in sentences:
-        if len(' '.join(current_chunk + [sentence])) <= max_chunk_length:
-            current_chunk.append(sentence)
-        else:
-            chunks.append(' '.join(current_chunk))
-            current_chunk = [sentence]
-    
-    # Add the last chunk if there's any content left
-    if current_chunk:
-        chunks.append(' '.join(current_chunk))
-    
-    logger.info(f"Text split into {len(chunks)} chunks.")
-    return chunks
 
 def run_pipeline(file_path):
     """
@@ -50,27 +23,27 @@ def run_pipeline(file_path):
             logger.error("Transcription file is empty or could not be loaded.")
             return
 
-        # Preprocess the transcription text
         processed_text = preprocess_text(transcription)
 
-        # Split the processed text into chunks
-        chunks = split_text_into_chunks(processed_text)
+        # Initialize tokenizer (using distilbert as an example)
+        tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
 
-        # Process each chunk individually
-        for i, chunk in enumerate(chunks):
-            logger.info(f"Processing chunk {i+1}/{len(chunks)}")
+        # Tokenize processed text and print the number of tokens
+        tokenized_input = tokenizer(processed_text, truncation=True, padding=True, return_tensors="pt")
+        num_tokens = tokenized_input["input_ids"].shape[1]  # Get the number of tokens
+        logger.info(f"Number of tokens: {num_tokens}")
 
-            # Step 1: Sentiment Analysis
-            sentiment = perform_sentiment_analysis(chunk)
-            logger.info(f"Sentiment Analysis Result for chunk {i+1}: {sentiment}")
+        # Step 1: Sentiment Analysis
+        sentiment = perform_sentiment_analysis(processed_text)
+        logger.info(f"Sentiment Analysis Result: {sentiment}")
 
-            # Step 2: Topic Modeling
-            topics = perform_topic_modeling(chunk)
-            logger.info(f"Identified Topics for chunk {i+1}: {topics}")
+        # Step 2: Topic Modeling
+        topics = perform_topic_modeling(processed_text)
+        logger.info(f"Identified Topics: {topics}")
 
-            # Step 3: Summarization
-            summary = generate_summary(chunk)
-            logger.info(f"Text Summary for chunk {i+1}: {summary}")
+        # Step 3: Summarization
+        summary = generate_summary(processed_text)
+        logger.info(f"Text Summary: {summary}")
 
     except Exception as e:
         logger.error(f"Error in pipeline: {e}")
