@@ -83,7 +83,7 @@ def run_pipeline(file_path):
 
 if __name__ == "__main__":
     # Define the path relative to the current script's location
-    transcription_file_path = os.path.join("..", "data", "transcription_output.txt")
+    transcription_file_path = os.path.join(".", "data", "transcription_output.txt")
     
     logger.info(f"\n===== Pipeline Started =====\n ")
     run_pipeline(transcription_file_path)
