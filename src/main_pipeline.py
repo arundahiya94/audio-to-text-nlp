@@ -6,7 +6,6 @@ from nlp_analysis.summarization import generate_summary
 import os
 from transformers import AutoTokenizer
 
-
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -42,23 +41,27 @@ def run_pipeline(file_path):
 
         logger.info(f"\n===== Starting Text Preprocessing =====\n ")
         processed_text = preprocess_text(transcription) 
+
         logger.info(f"\n===== Ending Text Preprocessing =====\n ")
 
         # Step 3: Summarization
-        # chunks = split_text_for_summary(processed_text)
-        # summary_parts = [generate_summary(chunk) for chunk in chunks]
+        logger.info(f"\n===== Summary Start =====\n")
+        chunks = split_text_for_summary(processed_text)
+        summary_parts = [generate_summary(chunk) for chunk in chunks]
         summary_parts = generate_summary(processed_text)
         summary = " ".join(summary_parts)
         
         logger.info(f"\n===== Summary Results =====\n {summary}")
 
         # Step 2: Topic Modeling
+        logger.info(f"\n===== Topic Modeling Start =====\n")
         topics = perform_topic_modeling(processed_text)
         logger.info(f"\n===== Topic Modeling Results =====\n {topics}")
 
-        # # Step 1: Sentiment Analysis
-        # sentiment_results = perform_sentiment_analysis(processed_text)
-        # logger.info(f"\n===== Sentiment Analysis Results =====\n {sentiment_results}")
+        # Step 1: Sentiment Analysis
+        logger.info(f"\n===== Sentiment Analysis Start =====\n")
+        sentiment_results = perform_sentiment_analysis(processed_text)
+        logger.info(f"\n===== Sentiment Analysis Results =====\n {sentiment_results}")
 
     except Exception as e:
         logger.error(f"Error in pipeline: {e}")
