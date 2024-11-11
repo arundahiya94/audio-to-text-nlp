@@ -2,7 +2,7 @@ import logging
 from nlp_analysis.preprocessing import load_transcription, preprocess_text
 from nlp_analysis.sentiment_analysis import perform_sentiment_analysis
 from nlp_analysis.topic_modelling import perform_topic_modeling
-from nlp_analysis.summarization import generate_summary
+from nlp_analysis.summarization import generate_summary, summarize_text
 import os
 from transformers import AutoTokenizer
 
@@ -54,13 +54,7 @@ def run_pipeline(file_path):
         # Step 1: Summarization
         try:
             logger.info(f"\n===== Summary Start =====\n")
-            chunks = split_text_for_summary(processed_text, max_tokens=1024)
-            
-            # Generate summary for each chunk
-            summary_parts = [generate_summary(chunk) for chunk in chunks]
-            
-            # Join summaries from each chunk into one final summary
-            summary = " ".join(summary_parts)
+            summary = summarize_text(transcription)
             logger.info(f"{summary}")
             logger.info(f"\n===== Summary Results =====\n")
         except Exception as e:
