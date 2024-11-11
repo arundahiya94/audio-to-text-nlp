@@ -21,10 +21,18 @@ def split_text_for_summary(text, max_tokens=1024):
     :param max_tokens: Maximum number of tokens allowed per chunk.
     :return: List of text chunks.
     """
-    tokens = tokenizer(text, return_tensors="pt", truncation=False)["input_ids"][0]
-    chunks = [tokens[i:i + max_tokens] for i in range(0, len(tokens), max_tokens)]
-    chunk_texts = [tokenizer.decode(chunk, skip_special_tokens=True) for chunk in chunks]
-    return chunk_texts
+    # Tokenize the text
+    tokenized_text = tokenizer.encode(text, truncation=False)
+    chunks = []
+    
+    # Split tokenized text into chunks of size max_tokens or less
+    for i in range(0, len(tokenized_text), max_tokens):
+        chunk = tokenized_text[i:i + max_tokens]
+        chunk_text = tokenizer.decode(chunk, skip_special_tokens=True)
+        chunks.append(chunk_text)
+
+    return chunks
+
 
 def run_pipeline(file_path):
     """
@@ -41,30 +49,43 @@ def run_pipeline(file_path):
 
         logger.info(f"\n===== Starting Text Preprocessing =====\n ")
         processed_text = preprocess_text(transcription) 
-
         logger.info(f"\n===== Ending Text Preprocessing =====\n ")
 
-        # Step 3: Summarization
-        logger.info(f"\n===== Summary Start =====\n")
-        chunks = split_text_for_summary(processed_text)
-        summary_parts = [generate_summary(chunk) for chunk in chunks]
-        summary_parts = generate_summary(processed_text)
-        summary = " ".join(summary_parts)
-        
-        logger.info(f"\n===== Summary Results =====\n {summary}")
+        # Step 1: Summarization
+        try:
+            logger.info(f"\n===== Summary Start =====\n")
+            chunks = split_text_for_summary(processed_text, max_tokens=1024)
+            
+            # Generate summary for each chunk
+            summary_parts = [generate_summary(chunk) for chunk in chunks]
+            
+            # Join summaries from each chunk into one final summary
+            summary = " ".join(summary_parts)
+            logger.info(f"{summary}")
+            logger.info(f"\n===== Summary Results =====\n")
+        except Exception as e:
+            logger.error(f"Error in summarization: {e}")
 
         # Step 2: Topic Modeling
-        logger.info(f"\n===== Topic Modeling Start =====\n")
-        topics = perform_topic_modeling(processed_text)
-        logger.info(f"\n===== Topic Modeling Results =====\n {topics}")
+        try:
+            logger.info(f"\n===== Topic Modeling Start =====\n")
+            topics = perform_topic_modeling(transcription)
+            logger.info(f"{topics}")
+            logger.info(f"\n===== Topic Modeling Results =====\n")
+        except Exception as e:
+            logger.error(f"Error in topic modeling: {e}")
 
-        # Step 1: Sentiment Analysis
-        logger.info(f"\n===== Sentiment Analysis Start =====\n")
-        sentiment_results = perform_sentiment_analysis(processed_text)
-        logger.info(f"\n===== Sentiment Analysis Results =====\n {sentiment_results}")
+        # Step 3: Sentiment Analysis
+        try:
+            logger.info(f"\n===== Sentiment Analysis Start =====\n")
+            sentiment_results = perform_sentiment_analysis(processed_text)
+            logger.info(f"Over all Sentiments : {sentiment_results}")
+            logger.info(f"\n===== Sentiment Analysis Results =====\n ")
+        except Exception as e:
+            logger.error(f"Error in sentiment analysis: {e}")
 
     except Exception as e:
-        logger.error(f"Error in pipeline: {e}")
+        logger.error(f"Error in pipeline setup or preprocessing: {e}")
 
 if __name__ == "__main__":
     # Define the path relative to the current script's location

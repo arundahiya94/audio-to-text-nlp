@@ -1,4 +1,3 @@
-# summarization.py
 from transformers import pipeline
 
 def generate_summary(text):
@@ -9,7 +8,6 @@ def generate_summary(text):
     :return: Summary of the text.
     """
     summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
-    # summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+    # Ensure the text is within the model's token limit
     summary = summarizer(text, max_length=130, min_length=30, do_sample=False)
     return summary[0]['summary_text']
-
