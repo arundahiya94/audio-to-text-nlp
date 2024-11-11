@@ -163,5 +163,5 @@ cython_debug/
 
 
 # Ignore Audio Files
-*.wav
-*.mp3
+# *.wav
+# *.mp3
