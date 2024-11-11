@@ -7,22 +7,20 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Initialize the sentiment analyzer and tokenizer
-sentiment_analyzer = pipeline("sentiment-analysis")
+# Initialize the transformer-based sentiment analyzer, tokenizer, and VADER sentiment analyzer
+transformer_sentiment_analyzer = pipeline("sentiment-analysis")
 tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+vader_analyzer = SentimentIntensityAnalyzer()
 
 def perform_sentiment_analysis(text):
     """
-    Performs sentiment analysis on text.
-    
-    :param text: Preprocessed text.
-    :return: Sentiment result with label and score.
+    Performs sentiment analysis on text using both transformer-based model and VADER.
     """
     return perform_sentiment_analysis_sliding_window(text=text)
 
 def perform_sentiment_analysis_sliding_window(text, window_size=512, overlap=256):
     """
-    Performs sentiment analysis on text using a sliding window approach.
+    Performs sentiment analysis on text using a sliding window approach and adds VADER sentiment.
     
     :param text: Preprocessed text.
     :param window_size: Maximum number of tokens for the model.
@@ -44,42 +42,78 @@ def perform_sentiment_analysis_sliding_window(text, window_size=512, overlap=256
         # Decode chunk tokens back to text for sentiment analysis
         chunk_text = tokenizer.decode(chunk_tokens, skip_special_tokens=True)
         
-        # Perform sentiment analysis on the current chunk
-        sentiment = sentiment_analyzer(chunk_text, truncation=True)[0]
-        chunk_scores.append((sentiment['label'], sentiment['score']))
+        # Perform sentiment analysis on the current chunk using transformer model
+        transformer_sentiment = transformer_sentiment_analyzer(chunk_text, truncation=True)[0]
         
-        # Log each chunk's sentiment result
-        logger.info(f"Chunk ({start}:{end}) - Label: {sentiment['label']}, Score: {sentiment['score']}")
+        # Perform sentiment analysis on the current chunk using VADER
+        vader_sentiment = vader_analyzer.polarity_scores(chunk_text)
+        
+        # Collect and log the combined sentiment result
+        chunk_scores.append({
+            "label": transformer_sentiment['label'],
+            "score": transformer_sentiment['score'],
+            "vader_pos": vader_sentiment['pos'],
+            "vader_neu": vader_sentiment['neu'],
+            "vader_neg": vader_sentiment['neg'],
+            "vader_compound": vader_sentiment['compound']
+        })
+        
+        logger.info(
+            f"Chunk ({start}:{end}) - Transformer Label: {transformer_sentiment['label']}, "
+            f"Score: {transformer_sentiment['score']}, VADER Pos: {vader_sentiment['pos']}, "
+            f"Neu: {vader_sentiment['neu']}, Neg: {vader_sentiment['neg']}, Compound: {vader_sentiment['compound']}"
+        )
         
         # Move the start position forward, considering overlap
         start += window_size - overlap
-    
-    # Plot the sentiment scores for each chunk
+
+    # Plot sentiment scores for each chunk
     plot_sentiment_scores(chunk_scores)
     
-    # Aggregate the overall sentiment by majority vote
-    positive_count = sum(1 for label, _ in chunk_scores if label == "POSITIVE")
-    negative_count = sum(1 for label, _ in chunk_scores if label == "NEGATIVE")
+    # Aggregate overall sentiment based on transformer labels
+    positive_count = sum(1 for score in chunk_scores if score["label"] == "POSITIVE")
+    negative_count = sum(1 for score in chunk_scores if score["label"] == "NEGATIVE")
+    overall_sentiment = (
+        "POSITIVE" if positive_count > negative_count 
+        else "NEGATIVE" if negative_count > positive_count 
+        else "NEUTRAL"
+    )
     
-    overall_sentiment = "POSITIVE" if positive_count > negative_count else "NEGATIVE" if negative_count > positive_count else "NEUTRAL"
     logger.info(f"Overall Document Sentiment: {overall_sentiment}")
     
     return overall_sentiment
 
 def plot_sentiment_scores(chunk_scores):
     """
-    Plots the sentiment scores for each chunk.
-
-    :param chunk_scores: List of tuples (label, score).
+    Plots the sentiment scores for each chunk, including VADER scores.
     """
-    # Generate chunk labels based on the number of scores
+    # Generate chunk labels
     chunk_labels = [f"Chunk {i+1}" for i in range(len(chunk_scores))]
-    positive_scores = [score if label == 'POSITIVE' else 0 for label, score in chunk_scores]
-    negative_scores = [score if label == 'NEGATIVE' else 0 for label, score in chunk_scores]
+    
+    # Extract individual scores
+    transformer_positive_scores = [
+        score["score"] if score["label"] == 'POSITIVE' else 0 for score in chunk_scores
+    ]
+    transformer_negative_scores = [
+        score["score"] if score["label"] == 'NEGATIVE' else 0 for score in chunk_scores
+    ]
+    vader_positive = [score['vader_pos'] for score in chunk_scores]
+    vader_neutral = [score['vader_neu'] for score in chunk_scores]
+    vader_negative = [score['vader_neg'] for score in chunk_scores]
+    vader_compound = [score['vader_compound'] for score in chunk_scores]
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(chunk_labels, positive_scores, label="Positive", color="green", marker="o")
-    plt.plot(chunk_labels, negative_scores, label="Negative", color="red", marker="o")
+    # Plot transformer model scores
+    plt.figure(figsize=(12, 8))
+    plt.plot(chunk_labels, transformer_positive_scores, label="Transformer Positive", color="green", marker="o")
+    plt.plot(chunk_labels, transformer_negative_scores, label="Transformer Negative", color="red", marker="o")
+    
+    # Plot VADER sentiment scores
+    plt.plot(chunk_labels, vader_positive, label="VADER Positive", color="lightgreen", linestyle="--")
+    plt.plot(chunk_labels, vader_neutral, label="VADER Neutral", color="blue", linestyle="--")
+    plt.plot(chunk_labels, vader_negative, label="VADER Negative", color="orange", linestyle="--")
+    plt.plot(chunk_labels, vader_compound, label="VADER Compound", color="purple", linestyle="--")
+    
+    # Customize plot
     plt.xlabel("Chunks")
     plt.ylabel("Sentiment Score")
     plt.title("Sentiment Scores for Text Chunks")
@@ -87,4 +121,3 @@ def plot_sentiment_scores(chunk_scores):
     plt.legend()
     plt.tight_layout()
     plt.show()
-
