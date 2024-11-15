@@ -88,3 +88,4 @@ if __name__ == "__main__":
     logger.info(f"\n===== Pipeline Started =====\n ")
     run_pipeline(transcription_file_path)
     logger.info(f"\n===== Pipeline Ended =====\n ")
+
