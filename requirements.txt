@@ -1,4 +1,4 @@
-annotated-types==0.7.0
+my annotated-types==0.7.0
 anyio==4.6.2.post1
 assemblyai==0.35.1
 blis==1.0.1
@@ -95,3 +95,5 @@ websocket-client==1.8.0
 websockets==13.1
 wrapt==1.16.0
 xxhash==3.5.0
+
+
